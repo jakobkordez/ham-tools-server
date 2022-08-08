@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { compareSync, hash } from 'bcrypt';
 import { Model } from 'mongoose';
@@ -22,12 +26,16 @@ export class UsersService {
     return this.userModel.find().exec();
   }
 
-  findOne(id: string): Promise<User> {
-    return this.userModel.findById(id).exec();
+  async findOne(id: string): Promise<User> {
+    const user = await this.userModel.findById(id).exec();
+    if (!user) throw new NotFoundException('User not found');
+    return user;
   }
 
-  findOneByUsername(username: string): Promise<User> {
-    return this.userModel.findOne({ username: username }).exec();
+  async findOneByUsername(username: string): Promise<User> {
+    const user = await this.userModel.findOne({ username: username }).exec();
+    if (!user) throw new NotFoundException('User not found');
+    return user;
   }
 
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
@@ -39,13 +47,16 @@ export class UsersService {
         throw new BadRequestException('Username already exists');
     }
 
-    return this.userModel
+    const user = await this.userModel
       .findByIdAndUpdate(id, updateUserDto, { new: true })
       .exec();
+    if (!user) throw new NotFoundException('User not found');
+    return user;
   }
 
-  remove(id: string): Promise<User> {
-    return this.userModel.findByIdAndRemove(id).exec();
+  async remove(id: string): Promise<void> {
+    const user = await this.userModel.findByIdAndRemove(id).exec();
+    if (!user) throw new NotFoundException('User not found');
   }
 
   async addLogin(id: string, refreshToken: string): Promise<User> {

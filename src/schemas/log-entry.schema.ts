@@ -18,8 +18,13 @@ export class LogEntry {
   @Prop({ required: true, default: () => new Date(Date.now()) })
   created_at: Date;
 
+  @Prop()
+  datetime_on: Date;
+
   @Prop({ type: Object, required: true })
   data: object;
 }
 
 export const LogEntrySchema = SchemaFactory.createForClass(LogEntry);
+
+LogEntrySchema.index({ datetime_on: -1 });

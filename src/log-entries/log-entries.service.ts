@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { FilterQuery, Model } from 'mongoose';
 import { LogEntry, LogEntryDocument } from 'src/schemas/log-entry.schema';
 import { CreateLogEntryDto } from './dto/create-log-entry.dto';
 import { UpdateLogEntryDto } from './dto/update-log-entry.dto';
@@ -13,12 +13,6 @@ export class LogEntriesService {
 
   create(createLogEntryDto: CreateLogEntryDto): Promise<LogEntry> {
     const logEntry = new this.logEntryModel(createLogEntryDto);
-    logEntry.data = Object.fromEntries(
-      Object.entries(logEntry.data).map(([key, value]) => [
-        key.toUpperCase(),
-        value,
-      ]),
-    );
     return logEntry.save();
   }
 
@@ -29,21 +23,54 @@ export class LogEntriesService {
     return this.logEntryModel.insertMany(logEntries);
   }
 
-  findAll(): Promise<LogEntry[]> {
-    return this.logEntryModel.find().exec();
+  count({ owner, after, before }): Promise<number> {
+    const q: FilterQuery<LogEntryDocument> = {};
+    if (owner) {
+      q.owner = owner;
+    }
+    if (after && before) {
+      q.datetime_on = { $gte: after, $lte: before };
+    } else if (after) {
+      q.datetime_on = { $gt: after };
+    } else if (before) {
+      q.datetime_on = { $lt: before };
+    }
+
+    return this.logEntryModel.find(q).count().exec();
   }
 
-  findOne(id: string): Promise<LogEntry> {
-    return this.logEntryModel.findById(id).exec();
+  findAll({ owner, after, before }): Promise<LogEntry[]> {
+    const q: FilterQuery<LogEntryDocument> = {};
+    if (owner) {
+      q.owner = owner;
+    }
+    if (after && before) {
+      q.datetime_on = { $gte: after, $lte: before };
+    } else if (after) {
+      q.datetime_on = { $gt: after };
+    } else if (before) {
+      q.datetime_on = { $lt: before };
+    }
+
+    return this.logEntryModel.find(q).sort({ datetime_on: -1 }).exec();
   }
 
-  update(id: string, updateLogEntryDto: UpdateLogEntryDto): Promise<LogEntry> {
-    return this.logEntryModel
-      .findByIdAndUpdate(id, updateLogEntryDto, { new: true })
+  async findOne(id: string): Promise<LogEntry> {
+    const entry = await this.logEntryModel.findById(id).exec();
+    if (!entry) throw new NotFoundException('Log entry not found');
+    return entry;
+  }
+
+  async update(id: string, update: UpdateLogEntryDto): Promise<LogEntry> {
+    const entry = await this.logEntryModel
+      .findByIdAndUpdate(id, update, { new: true })
       .exec();
+    if (!entry) throw new NotFoundException('Log entry not found');
+    return entry;
   }
 
-  remove(id: string): Promise<LogEntry> {
-    return this.logEntryModel.findByIdAndRemove(id).exec();
+  async remove(id: string): Promise<void> {
+    const entry = await this.logEntryModel.findByIdAndRemove(id).exec();
+    if (!entry) throw new NotFoundException('Log entry not found');
   }
 }

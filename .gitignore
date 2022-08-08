@@ -1,5 +1,8 @@
 .env
 
+*.spec.ts
+test/
+
 # compiled output
 /dist
 /node_modules

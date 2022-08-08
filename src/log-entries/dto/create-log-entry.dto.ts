@@ -11,4 +11,6 @@ export class CreateLogEntryDto {
 
   @IsObject()
   data: object;
+
+  datetime_on: Date;
 }
