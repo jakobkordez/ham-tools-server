@@ -60,6 +60,8 @@ export class UsersService {
   }
 
   async addLogin(id: string, refreshToken: string): Promise<User> {
+    const rta = refreshToken.split('.');
+    refreshToken = rta[rta.length - 1];
     const hashedToken = await hash(refreshToken, 10);
     return this.userModel
       .findByIdAndUpdate(id, { $push: { logins: hashedToken } })
@@ -70,13 +72,22 @@ export class UsersService {
     const user = await this.userModel.findById(id);
     if (!user) return false;
 
+    const rta = refreshToken.split('.');
+    refreshToken = rta[rta.length - 1];
     return user.logins.some((token) => compareSync(refreshToken, token));
   }
 
   async removeLogin(id: string, refreshToken: string): Promise<User> {
-    const hashedToken = await hash(refreshToken, 10);
+    const user = await this.userModel.findById(id);
+    if (!user) throw new NotFoundException('User not found');
+
+    const rta = refreshToken.split('.');
+    refreshToken = rta[rta.length - 1];
+    const logins = user.logins.filter(
+      (token) => !compareSync(refreshToken, token),
+    );
     return this.userModel
-      .findByIdAndUpdate(id, { $pull: { logins: hashedToken } })
+      .findByIdAndUpdate(id, { logins: logins }, { new: true })
       .exec();
   }
 }

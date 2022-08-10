@@ -60,7 +60,6 @@ export class AuthService {
   }
 
   async logout(userId: string, refresh_token: string): Promise<void> {
-    const user = await this.usersService.removeLogin(userId, refresh_token);
-    if (!user) throw new NotFoundException('User not found');
+    await this.usersService.removeLogin(userId, refresh_token);
   }
 }
