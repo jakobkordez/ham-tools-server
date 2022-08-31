@@ -23,36 +23,38 @@ export class LogEntriesService {
     return this.logEntryModel.insertMany(logEntries);
   }
 
-  count({ owner, after, before }): Promise<number> {
+  count({ owner }): Promise<number> {
     const q: FilterQuery<LogEntryDocument> = {};
     if (owner) {
       q.owner = owner;
-    }
-    if (after && before) {
-      q.datetime_on = { $gte: after, $lte: before };
-    } else if (after) {
-      q.datetime_on = { $gt: after };
-    } else if (before) {
-      q.datetime_on = { $lt: before };
     }
 
     return this.logEntryModel.find(q).count().exec();
   }
 
-  findAll({ owner, after, before }): Promise<LogEntry[]> {
+  findAll({ owner, cursorId, cursorDate, limit }): Promise<LogEntry[]> {
     const q: FilterQuery<LogEntryDocument> = {};
     if (owner) {
       q.owner = owner;
     }
-    if (after && before) {
-      q.datetime_on = { $gte: after, $lte: before };
-    } else if (after) {
-      q.datetime_on = { $gt: after };
-    } else if (before) {
-      q.datetime_on = { $lt: before };
+    if (cursorId && cursorDate) {
+      cursorDate = new Date(cursorDate);
+      q.$or = [
+        { datetime_on: { $lt: cursorDate } },
+        {
+          $and: [
+            { datetime_on: { $eq: cursorDate } },
+            { _id: { $lt: cursorId } },
+          ],
+        },
+      ];
     }
 
-    return this.logEntryModel.find(q).sort({ datetime_on: -1 }).exec();
+    return this.logEntryModel
+      .find(q)
+      .sort({ datetime_on: -1, _id: -1 })
+      .limit(limit)
+      .exec();
   }
 
   async findOne(id: string): Promise<LogEntry> {

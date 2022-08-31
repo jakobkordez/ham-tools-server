@@ -27,4 +27,4 @@ export class LogEntry {
 
 export const LogEntrySchema = SchemaFactory.createForClass(LogEntry);
 
-LogEntrySchema.index({ datetime_on: -1 });
+LogEntrySchema.index({ datetime_on: -1, _id: -1 });

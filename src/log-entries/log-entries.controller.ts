@@ -17,6 +17,7 @@ import { RequestUser } from 'src/decorators/request-user.decorator';
 import { User } from 'src/schemas/user.schema';
 import { MapLogEntryPipe } from 'src/pipes/map-log-entry.pipe';
 import { MapLogEntryArrayPipe } from 'src/pipes/map-log-entry-array.pipe';
+import { LogEntriesQuery } from './log-entries-query';
 
 @Controller('log')
 export class LogEntriesController {
@@ -47,33 +48,28 @@ export class LogEntriesController {
   }
 
   @Get('count')
-  count(
-    @RequestUser() user: User,
-    @Query('all') all: boolean = false,
-    @Query('after') after: string,
-    @Query('before') before: string,
-  ) {
+  count(@RequestUser() user: User, @Query('all') all: boolean = false) {
     var userId = user.id;
     if (all) {
       userId = undefined;
     }
 
-    return this.logEntriesService.count({ owner: userId, after, before });
+    return this.logEntriesService.count({ owner: userId });
   }
 
   @Get()
-  findAll(
-    @RequestUser() user: User,
-    @Query('all') all: boolean = false,
-    @Query('after') after: string,
-    @Query('before') before: string,
-  ) {
+  findAll(@RequestUser() user: User, @Query() query: LogEntriesQuery) {
     var userId = user.id;
-    if (all) {
+    if (query.all) {
       userId = undefined;
     }
 
-    return this.logEntriesService.findAll({ owner: userId, after, before });
+    return this.logEntriesService.findAll({
+      owner: userId,
+      cursorId: query.cursorId,
+      cursorDate: query.cursorDate,
+      limit: query.limit,
+    });
   }
 
   @Get(':id')
