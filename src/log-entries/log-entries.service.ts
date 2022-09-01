@@ -75,4 +75,8 @@ export class LogEntriesService {
     const entry = await this.logEntryModel.findByIdAndRemove(id).exec();
     if (!entry) throw new NotFoundException('Log entry not found');
   }
+
+  async removeMany(ids: string[]): Promise<void> {
+    await this.logEntryModel.deleteMany({ _id: { $in: ids } }).exec();
+  }
 }

@@ -18,6 +18,7 @@ import { User } from 'src/schemas/user.schema';
 import { MapLogEntryPipe } from 'src/pipes/map-log-entry.pipe';
 import { MapLogEntryArrayPipe } from 'src/pipes/map-log-entry-array.pipe';
 import { LogEntriesQuery } from './log-entries-query';
+import { DeleteLogEntriesDto } from './dto/delete-log-entries.dto';
 
 @Controller('log')
 export class LogEntriesController {
@@ -88,5 +89,10 @@ export class LogEntriesController {
   @Delete(':id')
   remove(@Param('id', MongoIdPipe) id: string) {
     return this.logEntriesService.remove(id);
+  }
+
+  @Delete()
+  removeMany(@Body() ids: DeleteLogEntriesDto) {
+    return this.logEntriesService.removeMany(ids.ids);
   }
 }
