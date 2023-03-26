@@ -8,7 +8,11 @@ import { ProfilesModule } from './profiles/profiles.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, cache: true }),
+    ConfigModule.forRoot({
+      envFilePath: ['.env.local', '.env'],
+      isGlobal: true,
+      cache: true,
+    }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({

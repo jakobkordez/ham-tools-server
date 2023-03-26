@@ -1,4 +1,5 @@
-.env
+# local env files
+.env*.local
 
 *.spec.ts
 test/
