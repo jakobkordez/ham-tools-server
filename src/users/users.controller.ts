@@ -3,18 +3,15 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
-  Delete,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { MongoIdPipe } from 'src/pipes/mongo-id.pipe';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from './role.enum';
 import { RequestUser } from 'src/decorators/request-user.decorator';
-import { User } from 'src/schemas/user.schema';
+import { UserTokenData } from 'src/interfaces/user-token-data.interface';
 
 @Controller('users')
 export class UsersController {
@@ -32,32 +29,32 @@ export class UsersController {
   }
 
   @Get('me')
-  getSelf(@RequestUser() user: User) {
+  getSelf(@RequestUser() user: UserTokenData) {
     return this.usersService.findOne(user.id);
   }
 
-  @Patch('me')
-  updateSelf(@RequestUser() user: User, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(user.id, updateUserDto);
-  }
+  // @Patch('me')
+  // updateSelf(@RequestUser() user: UserTokenData, @Body() updateUserDto: UpdateUserDto) {
+  //   return this.usersService.update(user.id, updateUserDto);
+  // }
 
   @Get(':id')
-  findOne(@Param('id', MongoIdPipe) id: string) {
+  findOne(@Param('id', ParseIntPipe) id: number) {
     return this.usersService.findOne(id);
   }
 
-  @Roles(Role.Admin)
-  @Patch(':id')
-  update(
-    @Param('id', MongoIdPipe) id: string,
-    @Body() updateUserDto: UpdateUserDto,
-  ) {
-    return this.usersService.update(id, updateUserDto);
-  }
+  // @Roles(Role.Admin)
+  // @Patch(':id')
+  // update(
+  //   @Param('id', ParseIntPipe) id: number,
+  //   @Body() updateUserDto: UpdateUserDto,
+  // ) {
+  //   return this.usersService.update(id, updateUserDto);
+  // }
 
-  @Roles(Role.Admin)
-  @Delete(':id')
-  remove(@Param('id', MongoIdPipe) id: string) {
-    return this.usersService.remove(id);
-  }
+  // @Roles(Role.Admin)
+  // @Delete(':id')
+  // remove(@Param('id', ParseIntPipe) id: number) {
+  //   return this.usersService.remove(id);
+  // }
 }

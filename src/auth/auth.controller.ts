@@ -1,17 +1,19 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
   Post,
-  Request,
   UseGuards,
 } from '@nestjs/common';
-import { Public } from 'src/decorators/public.decorator';
-import { RequestUser } from 'src/decorators/request-user.decorator';
-import { LoginData } from 'src/interfaces/login-data.interface';
-import { User } from 'src/schemas/user.schema';
 import { AuthService } from './auth.service';
-import { LocalAuthGuard } from './local-auth.guard';
+import { Public } from 'src/decorators/public.decorator';
+import { CreateUserDto } from 'src/users/dto/create-user.dto';
+import { LocalAuthGuard } from './guards/local-auth.guard';
+import { RequestUser } from 'src/decorators/request-user.decorator';
+import { RefreshAuthGuard } from './guards/refresh-auth.guard';
+import { UserTokenData } from 'src/interfaces/user-token-data.interface';
+import { AuthToken } from 'src/decorators/auth-token.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -20,21 +22,28 @@ export class AuthController {
   @Public()
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  login(@Request() req): Promise<LoginData> {
-    return this.authService.login(req.user);
+  login(@RequestUser() user: UserTokenData) {
+    return this.authService.login(user);
   }
 
   @Public()
-  @Post('refresh')
-  refresh(@Body('refresh_token') refresh_token: string) {
-    return this.authService.refreshToken(refresh_token);
+  @Post('register')
+  register(@Body() createUserDto: CreateUserDto) {
+    return this.authService.register(createUserDto);
   }
 
-  @Post('logout')
-  logout(
-    @RequestUser() user: User,
-    @Body('refresh_token') refresh_token: string,
-  ): Promise<void> {
-    return this.authService.logout(user.id, refresh_token);
+  @Public()
+  @UseGuards(RefreshAuthGuard)
+  @Get('refresh')
+  refresh(@AuthToken() token: string) {
+    const newAuth = this.authService.refresh(token);
+    if (!newAuth) throw new BadRequestException('Invalid token');
+
+    return newAuth;
+  }
+
+  @Get('logout/all')
+  logout(@RequestUser() user: UserTokenData): Promise<void> {
+    return this.authService.logoutAll(user.id);
   }
 }

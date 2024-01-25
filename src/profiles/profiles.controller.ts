@@ -3,25 +3,24 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
-  Delete,
+  ParseIntPipe,
+  Patch,
   NotFoundException,
-  ForbiddenException,
 } from '@nestjs/common';
 import { ProfilesService } from './profiles.service';
 import { CreateProfileDto } from './dto/create-profile.dto';
-import { UpdateProfileDto } from './dto/update-profile.dto';
-import { MongoIdPipe } from 'src/pipes/mongo-id.pipe';
 import { RequestUser } from 'src/decorators/request-user.decorator';
-import { User } from 'src/schemas/user.schema';
+import { User } from 'src/users/entities/user.entity';
+import { UserTokenData } from 'src/interfaces/user-token-data.interface';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @Controller('profiles')
 export class ProfilesController {
   constructor(private readonly profilesService: ProfilesService) {}
 
   @Post()
-  create(
+  async create(
     @RequestUser() user: User,
     @Body() createProfileDto: CreateProfileDto,
   ) {
@@ -29,49 +28,52 @@ export class ProfilesController {
   }
 
   @Get()
-  findAll() {
-    return this.profilesService.findAll();
+  findAll(@RequestUser() user: UserTokenData) {
+    return this.profilesService.findAll(user.id);
   }
 
   @Get(':id')
-  findOne(@Param('id', MongoIdPipe) id: string) {
-    return this.profilesService.findOne(id);
+  async findOne(
+    @RequestUser() user: UserTokenData,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    const profile = await this.profilesService.findOne(id, user.id);
+    if (!profile) {
+      throw new NotFoundException('Profile not found');
+    }
+
+    return profile;
   }
 
   @Patch(':id')
   async update(
-    @RequestUser() user: User,
-    @Param('id', MongoIdPipe) id: string,
+    @RequestUser() user: UserTokenData,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateProfileDto: UpdateProfileDto,
   ) {
-    const profile = await this.profilesService.findOne(id);
+    const profile = await this.profilesService.findOne(id, user.id);
     if (!profile) {
       throw new NotFoundException('Profile not found');
-    }
-    if (!user.roles.includes('admin') && user.id != profile.owner) {
-      throw new ForbiddenException(
-        'You are not allowed to delete this profile',
-      );
     }
 
     return this.profilesService.update(id, updateProfileDto);
   }
 
-  @Delete(':id')
-  async remove(
-    @RequestUser() user: User,
-    @Param('id', MongoIdPipe) id: string,
-  ) {
-    const profile = await this.profilesService.findOne(id);
-    if (!profile) {
-      throw new NotFoundException('Profile not found');
-    }
-    if (!user.roles.includes('admin') && user.id != profile.owner) {
-      throw new ForbiddenException(
-        'You are not allowed to delete this profile',
-      );
-    }
+  // @Delete(':id')
+  // async remove(
+  //   @RequestUser() user: UserTokenData,
+  //   @Param('id', ParseIntPipe) id: number,
+  // ) {
+  //   const profile = await this.profilesService.findOne(id);
+  //   if (!profile) {
+  //     throw new NotFoundException('Profile not found');
+  //   }
+  //   if (!user.roles.includes('admin') && user.id != profile.owner) {
+  //     throw new ForbiddenException(
+  //       'You are not allowed to delete this profile',
+  //     );
+  //   }
 
-    await this.profilesService.remove(id);
-  }
+  //   await this.profilesService.remove(id);
+  // }
 }

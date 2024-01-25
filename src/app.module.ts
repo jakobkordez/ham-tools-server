@@ -1,10 +1,12 @@
-import { Module } from '@nestjs/common';
+import { ClassSerializerInterceptor, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { MongooseModule } from '@nestjs/mongoose';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
-import { LogEntriesModule } from './log-entries/log-entries.module';
+import { QsosModule } from './qsos/qsos.module';
 import { ProfilesModule } from './profiles/profiles.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { AccessAuthGuard } from './auth/guards/access-auth.guard';
 
 @Module({
   imports: [
@@ -13,22 +15,38 @@ import { ProfilesModule } from './profiles/profiles.module';
       isGlobal: true,
       cache: true,
     }),
-    MongooseModule.forRootAsync({
+    TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
-        uri: configService.get<string>('MONGODB_URI'),
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
+        type: 'postgres',
+        host: configService.get('DB_HOST'),
+        port: +configService.get('DB_PORT'),
+        username: configService.get('DB_USERNAME'),
+        password: configService.get('DB_PASSWORD'),
+        database: configService.get('DB_DATABASE'),
+        autoLoadEntities: true,
+        // TODO remove synchronize in production
+        synchronize: true,
+        logging: true,
       }),
       inject: [ConfigService],
     }),
 
     UsersModule,
     AuthModule,
-    LogEntriesModule,
+    QsosModule,
     ProfilesModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: AccessAuthGuard,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ClassSerializerInterceptor,
+    },
+  ],
 })
 export class AppModule {}

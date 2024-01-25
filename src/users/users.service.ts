@@ -3,91 +3,101 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { compareSync, hash } from 'bcrypt';
-import { Model } from 'mongoose';
-import { User, UserDocument } from 'src/schemas/user.schema';
+import { hash } from 'bcrypt';
+import { User } from 'src/users/entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
+  constructor(
+    @InjectRepository(User) private usersRepository: Repository<User>,
+  ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    if (await this.userModel.findOne({ username: createUserDto.username }))
+    if (
+      await this.usersRepository.findOneBy({ username: createUserDto.username })
+    )
       throw new BadRequestException('Username already exists');
 
-    const user = new this.userModel(createUserDto);
-    return user.save();
+    const user = new User();
+    user.username = createUserDto.username;
+    user.password = await hash(createUserDto.password, 10);
+    user.name = createUserDto.name;
+
+    return this.usersRepository.save(user);
   }
 
   findAll(): Promise<User[]> {
-    return this.userModel.find().exec();
+    return this.usersRepository.find();
   }
 
-  async findOne(id: string): Promise<User> {
-    const user = await this.userModel.findById(id).exec();
-    if (!user) throw new NotFoundException('User not found');
+  async findOne(id: number): Promise<User> {
+    const user = await this.usersRepository.findOneBy({ id });
     return user;
   }
 
   async findOneByUsername(username: string): Promise<User> {
-    const user = await this.userModel.findOne({ username: username }).exec();
-    if (!user) throw new NotFoundException('User not found');
+    const user = await this.usersRepository.findOneBy({ username });
     return user;
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
-    if (updateUserDto.username) {
-      const user = await this.userModel.findOne({
-        username: updateUserDto.username,
-      });
-      if (user && user.id !== id)
-        throw new BadRequestException('Username already exists');
-    }
+  // async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
+  //   if (updateUserDto.username) {
+  //     const user = await this.usersRepository.findOneBy({
+  //       username: updateUserDto.username,
+  //     });
+  //     if (user && user.id !== id)
+  //       throw new BadRequestException('Username already exists');
+  //   }
 
-    const user = await this.userModel
-      .findByIdAndUpdate(id, updateUserDto, { new: true })
-      .exec();
+  //   const user = await this.usersRepository.findByIdAndUpdate(
+  //     id,
+  //     updateUserDto,
+  //     { new: true },
+  //   );
+  //   if (!user) throw new NotFoundException('User not found');
+  //   return user;
+  // }
+
+  async remove(id: number): Promise<void> {
+    const user = await this.usersRepository.delete(id);
     if (!user) throw new NotFoundException('User not found');
-    return user;
   }
 
-  async remove(id: string): Promise<void> {
-    const user = await this.userModel.findByIdAndRemove(id).exec();
-    if (!user) throw new NotFoundException('User not found');
-  }
+  // async addLogin(user: User, refreshToken: string): Promise<Login> {
+  //   const sig = refreshToken.split('.')[2];
+  //   const hashedToken = await hash(sig, 10);
 
-  async addLogin(id: string, refreshToken: string): Promise<User> {
-    const rta = refreshToken.split('.');
-    refreshToken = rta[rta.length - 1];
-    const hashedToken = await hash(refreshToken, 10);
-    return this.userModel
-      .findByIdAndUpdate(id, { $push: { logins: hashedToken } })
-      .exec();
-  }
+  //   const login = new Login();
+  //   login.user = user;
+  //   login.token = hashedToken;
+  //   return this.loginsRepository.save(login);
+  // }
 
-  async checkRefreshToken(id: string, refreshToken: string): Promise<boolean> {
-    const user = await this.userModel.findById(id);
-    if (!user) return false;
+  // async checkRefreshToken(id: number, refreshToken: string): Promise<boolean> {
+  //   const user = await this.usersRepository.findOneBy({ id });
+  //   if (!user) return false;
 
-    const rta = refreshToken.split('.');
-    refreshToken = rta[rta.length - 1];
-    return user.logins.some((token) => compareSync(refreshToken, token));
-  }
+  //   const rta = refreshToken.split('.');
+  //   refreshToken = rta[rta.length - 1];
+  //   return user.logins.some((token) => compareSync(refreshToken, token));
+  // }
 
-  async removeLogin(id: string, refreshToken: string): Promise<User> {
-    const user = await this.userModel.findById(id);
-    if (!user) throw new NotFoundException('User not found');
+  // async removeLogin(id: number, refreshToken: string): Promise<User> {
+  //   const user = await this.usersRepository.findOneBy({ id });
+  //   if (!user) throw new NotFoundException('User not found');
 
-    const rta = refreshToken.split('.');
-    refreshToken = rta[rta.length - 1];
-    const logins = user.logins.filter(
-      (token) => !compareSync(refreshToken, token),
-    );
-    return this.userModel
-      .findByIdAndUpdate(id, { logins: logins }, { new: true })
-      .exec();
-  }
+  //   const rta = refreshToken.split('.');
+  //   refreshToken = rta[rta.length - 1];
+  //   const logins = user.logins.filter(
+  //     (token) => !compareSync(refreshToken, token),
+  //   );
+  //   return this.usersRepository.findByIdAndUpdate(
+  //     id,
+  //     { logins: logins },
+  //     { new: true },
+  //   );
+  // }
 }
