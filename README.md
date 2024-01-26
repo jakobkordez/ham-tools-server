@@ -38,13 +38,13 @@
 
 ### Log
 
-| Method   | Route        | Description                   |
-| -------- | ------------ | ----------------------------- |
-| `POST`   | `/log`       | Create log entry              |
-| `POST`   | `/log/many`  | Create multiple log entries   |
-| `GET`    | `/log/count` | Get log entry count           |
-| `GET`    | `/log`       | Get entries (paginated)       |
-| `GET`    | `/log/:id`   | Get entry by id               |
-| `PATCH`  | `/log/:id`   | Update entry by id            |
-| `DELETE` | `/log/:id`   | Delete entry by id            |
-| `DELETE` | `/log`       | Delete multiple entries by id |
+| Method   | Route        | Description                |
+| -------- | ------------ | -------------------------- |
+| `POST`   | `/log`       | Create qso                 |
+| `POST`   | `/log/many`  | Create multiple qsos       |
+| `GET`    | `/log/count` | Get qso count              |
+| `GET`    | `/log`       | Get qsos (paginated)       |
+| `GET`    | `/log/:id`   | Get qso by id              |
+| `PATCH`  | `/log/:id`   | Update qso by id           |
+| `DELETE` | `/log/:id`   | Delete qso by id           |
+| `DELETE` | `/log`       | Delete multiple qsos by id |

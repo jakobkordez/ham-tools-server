@@ -64,7 +64,7 @@ export class QsosService {
 
   async findOne(id: number, userId: number): Promise<Qso> {
     const entry = await this.qsosRepository.findOneBy({ id, ownerId: userId });
-    if (!entry) throw new NotFoundException('Log entry not found');
+    if (!entry) throw new NotFoundException('QSO not found');
     return entry;
   }
 
