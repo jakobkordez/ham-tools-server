@@ -29,7 +29,7 @@ export class QsosService {
   count({ owner }): Promise<number> {
     const q: FindManyOptions<Qso> = {};
     if (owner) {
-      q.where = { owner: { id: owner } };
+      q.where = { ownerId: owner };
     }
 
     return this.qsosRepository.count();
@@ -38,7 +38,7 @@ export class QsosService {
   async findAll({ owner, skip, limit }): Promise<Qso[]> {
     let q: FindOptionsWhere<Qso> = {};
     if (owner) {
-      q = { owner: { id: owner } };
+      q = { ownerId: owner };
     }
     // if (cursorId && cursorDate) {
     //   cursorDate = new Date(cursorDate);

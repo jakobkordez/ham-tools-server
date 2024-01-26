@@ -1,9 +1,9 @@
 import {
   Column,
   Entity,
+  JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
-  RelationId,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Profile } from 'src/profiles/profile.entity';
@@ -14,9 +14,10 @@ export class Qso {
   id: number;
 
   @ManyToOne(() => User, (user) => user.qsos)
+  @JoinColumn({ name: 'ownerId' })
   owner: User;
 
-  @RelationId((qso: Qso) => qso.owner)
+  @Column()
   ownerId: number;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
@@ -34,10 +35,11 @@ export class Qso {
   @Column({ nullable: true })
   operator: string;
 
-  @ManyToOne(() => Profile, (profile) => profile.qsos, { nullable: true })
+  @ManyToOne(() => Profile, (profile) => profile.qsos)
+  @JoinColumn({ name: 'profileId' })
   profile: Profile;
 
-  @RelationId((qso: Qso) => qso.profile)
+  @Column({ nullable: true })
   profileId: number;
 
   @Column()

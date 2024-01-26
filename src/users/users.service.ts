@@ -8,6 +8,7 @@ import { User } from 'src/users/entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -43,23 +44,20 @@ export class UsersService {
     return user;
   }
 
-  // async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
-  //   if (updateUserDto.username) {
-  //     const user = await this.usersRepository.findOneBy({
-  //       username: updateUserDto.username,
-  //     });
-  //     if (user && user.id !== id)
-  //       throw new BadRequestException('Username already exists');
-  //   }
+  async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
+    const user = await this.findOne(id);
 
-  //   const user = await this.usersRepository.findByIdAndUpdate(
-  //     id,
-  //     updateUserDto,
-  //     { new: true },
-  //   );
-  //   if (!user) throw new NotFoundException('User not found');
-  //   return user;
-  // }
+    if (updateUserDto.username && user.username !== updateUserDto.username) {
+      const user = await this.usersRepository.findOneBy({
+        username: updateUserDto.username,
+      });
+      if (user) throw new BadRequestException('Username already exists');
+    }
+
+    Object.assign(user, updateUserDto);
+    await this.usersRepository.save(user);
+    return user;
+  }
 
   async remove(id: number): Promise<void> {
     const user = await this.usersRepository.delete(id);

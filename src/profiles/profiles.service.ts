@@ -21,11 +21,11 @@ export class ProfilesService {
   }
 
   findAll(userId?: number): Promise<Profile[]> {
-    return this.profilesRepository.find({ where: { owner: { id: userId } } });
+    return this.profilesRepository.find({ where: { ownerId: userId } });
   }
 
   findOne(id: number, userId?: number): Promise<Profile> {
-    return this.profilesRepository.findOneBy({ id, owner: { id: userId } });
+    return this.profilesRepository.findOneBy({ id, ownerId: userId });
   }
 
   async update(

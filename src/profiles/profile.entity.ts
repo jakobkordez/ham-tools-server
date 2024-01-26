@@ -3,10 +3,10 @@ import { User } from '../users/entities/user.entity';
 import {
   Column,
   Entity,
+  JoinColumn,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
-  RelationId,
 } from 'typeorm';
 
 @Entity()
@@ -15,9 +15,10 @@ export class Profile {
   id: number;
 
   @ManyToOne(() => User, (user) => user.profiles)
+  @JoinColumn({ name: 'ownerId' })
   owner: User;
 
-  @RelationId((profile: Profile) => profile.owner)
+  @Column()
   ownerId: number;
 
   @Column()

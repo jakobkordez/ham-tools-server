@@ -1,9 +1,9 @@
 import {
   Column,
   Entity,
+  JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
-  RelationId,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
@@ -16,9 +16,10 @@ export class Login {
   timestamp: Date;
 
   @ManyToOne(() => User, (user) => user.logins)
+  @JoinColumn({ name: 'userId' })
   user: User;
 
-  @RelationId((login: Login) => login.user)
+  @Column()
   userId: number;
 
   @Column()

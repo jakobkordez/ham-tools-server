@@ -5,6 +5,7 @@ import {
   Body,
   Param,
   ParseIntPipe,
+  Patch,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -12,6 +13,7 @@ import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from './role.enum';
 import { RequestUser } from 'src/decorators/request-user.decorator';
 import { UserTokenData } from 'src/interfaces/user-token-data.interface';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Controller('users')
 export class UsersController {
@@ -33,10 +35,13 @@ export class UsersController {
     return this.usersService.findOne(user.id);
   }
 
-  // @Patch('me')
-  // updateSelf(@RequestUser() user: UserTokenData, @Body() updateUserDto: UpdateUserDto) {
-  //   return this.usersService.update(user.id, updateUserDto);
-  // }
+  @Patch('me')
+  updateSelf(
+    @RequestUser() user: UserTokenData,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    return this.usersService.update(user.id, updateUserDto);
+  }
 
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
