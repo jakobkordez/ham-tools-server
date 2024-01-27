@@ -4,7 +4,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from '../auth.service';
 import { Request } from 'express';
-import { UserTokenPayload } from 'src/interfaces/user-token-payload.interface';
+import { RefreshTokenPayload } from 'src/interfaces/refresh-token-payload.interface';
 
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(
@@ -23,12 +23,12 @@ export class JwtRefreshStrategy extends PassportStrategy(
     });
   }
 
-  async validate(req: Request, payload: UserTokenPayload) {
+  async validate(req: Request): Promise<RefreshTokenPayload> {
     const token = ExtractJwt.fromAuthHeaderAsBearerToken()(req);
 
-    const isValid = await this.authService.validateRefreshToken(token);
-    if (!isValid) throw new UnauthorizedException();
+    const payload = await this.authService.verifyRefreshJwt(token);
+    if (!payload) throw new UnauthorizedException();
 
-    return { id: payload.sub, username: payload.username };
+    return payload;
   }
 }

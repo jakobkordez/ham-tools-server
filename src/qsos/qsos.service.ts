@@ -62,13 +62,13 @@ export class QsosService {
     return qsos;
   }
 
-  async findOne(id: number, userId: number): Promise<Qso> {
+  async findOne(id: number, userId: string): Promise<Qso> {
     const entry = await this.qsosRepository.findOneBy({ id, ownerId: userId });
     if (!entry) throw new NotFoundException('QSO not found');
     return entry;
   }
 
-  async update(id: number, userId: number, update: UpdateQsoDto): Promise<Qso> {
+  async update(id: number, userId: string, update: UpdateQsoDto): Promise<Qso> {
     const entry = await this.qsosRepository.update(
       { id, ownerId: userId },
       update,
@@ -77,12 +77,12 @@ export class QsosService {
     return this.findOne(id, userId);
   }
 
-  async remove(id: number, userId: number): Promise<boolean> {
+  async remove(id: number, userId: string): Promise<boolean> {
     const res = await this.qsosRepository.delete({ id, ownerId: userId });
     return !!res.affected;
   }
 
-  async removeMany(ids: number[], userId: number): Promise<number> {
+  async removeMany(ids: number[], userId: string): Promise<number> {
     const res = await this.qsosRepository.delete({
       id: In(ids),
       ownerId: userId,

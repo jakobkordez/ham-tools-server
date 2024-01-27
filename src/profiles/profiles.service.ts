@@ -12,7 +12,7 @@ export class ProfilesService {
     private profilesRepository: Repository<Profile>,
   ) {}
 
-  create(createProfileDto: CreateProfileDto, userId: number): Promise<Profile> {
+  create(createProfileDto: CreateProfileDto, userId: string): Promise<Profile> {
     const profile = new Profile();
     Object.assign(profile, createProfileDto);
     profile.ownerId = userId;
@@ -20,11 +20,11 @@ export class ProfilesService {
     return this.profilesRepository.save(profile);
   }
 
-  findAll(userId?: number): Promise<Profile[]> {
+  findAll(userId?: string): Promise<Profile[]> {
     return this.profilesRepository.find({ where: { ownerId: userId } });
   }
 
-  findOne(id: number, userId?: number): Promise<Profile> {
+  findOne(id: number, userId?: string): Promise<Profile> {
     return this.profilesRepository.findOneBy({ id, ownerId: userId });
   }
 

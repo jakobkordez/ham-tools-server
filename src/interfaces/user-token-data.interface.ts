@@ -1,4 +1,4 @@
 export interface UserTokenData {
-  id: number;
+  id: string;
   username: string;
 }

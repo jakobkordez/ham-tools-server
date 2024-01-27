@@ -9,8 +9,8 @@ import { User } from '../../users/entities/user.entity';
 
 @Entity()
 export class Login {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   timestamp: Date;
@@ -19,10 +19,10 @@ export class Login {
   @JoinColumn({ name: 'userId' })
   user: User;
 
-  @Column()
-  userId: number;
+  @Column({ nullable: true })
+  userId: string;
 
-  @Column()
+  @Column({ nullable: true })
   token: string;
 
   @Column({ nullable: true })

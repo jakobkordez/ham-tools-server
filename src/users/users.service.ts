@@ -34,7 +34,7 @@ export class UsersService {
     return this.usersRepository.find();
   }
 
-  async findOne(id: number): Promise<User> {
+  async findOne(id: string): Promise<User> {
     const user = await this.usersRepository.findOneBy({ id });
     return user;
   }
@@ -44,7 +44,7 @@ export class UsersService {
     return user;
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
+  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
     const user = await this.findOne(id);
 
     if (updateUserDto.username && user.username !== updateUserDto.username) {

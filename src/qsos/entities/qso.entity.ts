@@ -18,7 +18,7 @@ export class Qso {
   owner: User;
 
   @Column()
-  ownerId: number;
+  ownerId: string;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;

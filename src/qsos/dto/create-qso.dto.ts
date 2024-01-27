@@ -9,7 +9,7 @@ import {
 export class CreateQsoDto {
   @IsOptional()
   @IsInt()
-  ownerId: number;
+  ownerId: string;
 
   @IsOptional()
   @IsDateString()

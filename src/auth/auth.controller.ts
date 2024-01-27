@@ -12,8 +12,8 @@ import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { RequestUser } from 'src/decorators/request-user.decorator';
 import { RefreshAuthGuard } from './guards/refresh-auth.guard';
-import { UserTokenData } from 'src/interfaces/user-token-data.interface';
 import { AuthToken } from 'src/decorators/auth-token.decorator';
+import { User } from 'src/users/entities/user.entity';
 
 @Controller('auth')
 export class AuthController {
@@ -22,7 +22,7 @@ export class AuthController {
   @Public()
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  login(@RequestUser() user: UserTokenData) {
+  login(@RequestUser() user: User) {
     return this.authService.login(user);
   }
 
@@ -40,10 +40,5 @@ export class AuthController {
     if (!newAuth) throw new BadRequestException('Invalid token');
 
     return newAuth;
-  }
-
-  @Get('logout/all')
-  logout(@RequestUser() user: UserTokenData): Promise<void> {
-    return this.authService.logoutAll(user.id);
   }
 }

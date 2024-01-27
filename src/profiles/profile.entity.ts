@@ -19,7 +19,7 @@ export class Profile {
   owner: User;
 
   @Column()
-  ownerId: number;
+  ownerId: string;
 
   @Column()
   profile_name: string;

@@ -4,16 +4,16 @@ import {
   Post,
   Body,
   Param,
-  ParseIntPipe,
   Patch,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from './role.enum';
 import { RequestUser } from 'src/decorators/request-user.decorator';
-import { UserTokenData } from 'src/interfaces/user-token-data.interface';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserTokenData } from 'src/interfaces/user-token-data.interface';
 
 @Controller('users')
 export class UsersController {
@@ -44,14 +44,14 @@ export class UsersController {
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.usersService.findOne(id);
   }
 
   // @Roles(Role.Admin)
   // @Patch(':id')
   // update(
-  //   @Param('id', ParseIntPipe) id: number,
+  //   @Param('id', ParseUUIDPipe) id: string,
   //   @Body() updateUserDto: UpdateUserDto,
   // ) {
   //   return this.usersService.update(id, updateUserDto);
@@ -59,7 +59,7 @@ export class UsersController {
 
   // @Roles(Role.Admin)
   // @Delete(':id')
-  // remove(@Param('id', ParseIntPipe) id: number) {
+  // remove(@Param('id', ParseUUIDPipe) id: string) {
   //   return this.usersService.remove(id);
   // }
 }

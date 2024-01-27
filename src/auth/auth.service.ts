@@ -3,13 +3,13 @@ import { UsersService } from 'src/users/users.service';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
-import { UserTokenPayload } from 'src/interfaces/user-token-payload.interface';
+import { RefreshTokenPayload } from 'src/interfaces/refresh-token-payload.interface';
 import { ConfigService } from '@nestjs/config';
-import { UserTokenData } from 'src/interfaces/user-token-data.interface';
 import { User } from 'src/users/entities/user.entity';
 import { Login } from './entities/login.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+import { AccessTokenPayload } from 'src/interfaces/access-token-payload.interface';
 
 @Injectable()
 export class AuthService {
@@ -34,22 +34,27 @@ export class AuthService {
    * @param user User to login
    * @returns Access and refresh tokens
    */
-  async login(user: UserTokenData) {
-    const payload: UserTokenPayload = {
+  async login(user: User) {
+    const login = await this.loginsRepository.save(new Login());
+
+    const aPayload: AccessTokenPayload = {
       username: user.username,
       sub: user.id,
     };
+    const rPayload: RefreshTokenPayload = {
+      username: user.username,
+      sub: user.id,
+      jti: login.id,
+    };
 
     const [accessToken, refreshToken] = await Promise.all([
-      this.getAccessToken(payload),
-      this.getRefreshToken(payload),
+      this.getAccessToken(aPayload),
+      this.getRefreshToken(rPayload),
     ]);
 
     const sig = refreshToken.split('.')[2];
     const hashedToken = await bcrypt.hash(sig, 10);
 
-    // Update refresh token
-    const login = new Login();
     login.userId = user.id;
     login.token = hashedToken;
     await this.loginsRepository.save(login);
@@ -66,38 +71,31 @@ export class AuthService {
    * @returns New access token and refresh token
    */
   async refresh(refreshToken: string) {
-    const payload = this.jwtService.decode(refreshToken) as UserTokenPayload;
+    const payload = await this.verifyRefreshJwt(refreshToken);
     if (!payload) return null;
 
-    const userId = payload.sub;
-    if (!userId) return null;
-
-    const user = await this.usersService.findOne(userId);
-    if (!user) return null;
-
-    const logins = await this.loginsRepository.find({ where: { user } });
-    if (!logins) return null;
-
-    const sig = refreshToken.split('.')[2];
-    const currentLogin = logins.find((l) => bcrypt.compareSync(sig, l.token));
-    if (!currentLogin) return null;
-
-    const newPayload: UserTokenPayload = {
+    const aPayload: AccessTokenPayload = {
       username: payload.username,
       sub: payload.sub,
     };
+    const rPayload: RefreshTokenPayload = {
+      username: payload.username,
+      sub: payload.sub,
+      jti: payload.jti,
+    };
     const [newAccessToken, newRefreshToken] = await Promise.all([
-      this.getAccessToken(newPayload),
-      this.getRefreshToken(newPayload),
+      this.getAccessToken(aPayload),
+      this.getRefreshToken(rPayload),
     ]);
 
     const newSig = newRefreshToken.split('.')[2];
     const hashedToken = await bcrypt.hash(newSig, 10);
 
     // Update refresh token
-    currentLogin.timestamp = new Date();
-    currentLogin.token = hashedToken;
-    await this.loginsRepository.save(currentLogin);
+    await this.loginsRepository.update(payload.jti, {
+      timestamp: new Date(),
+      token: hashedToken,
+    });
 
     return {
       accessToken: newAccessToken,
@@ -109,7 +107,7 @@ export class AuthService {
    * Deletes all refresh tokens of user
    * @param userId User to logout
    */
-  async logoutAll(userId: number) {
+  async logoutAll(userId: string) {
     this.loginsRepository.delete({ userId });
   }
 
@@ -127,63 +125,48 @@ export class AuthService {
     return this.usersService.create(createUserDto);
   }
 
-  async validateRefreshToken(token: string): Promise<boolean> {
-    const payload = this.jwtService.decode(token) as UserTokenPayload;
-    if (!payload) return false;
-
-    const userId = payload.sub;
-    if (!userId) return false;
-
-    const user = await this.usersService.findOne(userId);
-    if (!user) return false;
-
-    const logins = await this.loginsRepository.find({ where: { user } });
-    if (!logins) return false;
-
-    const sig = token.split('.')[2];
-    return logins.some((l) => bcrypt.compareSync(sig, l.token));
-  }
-
   /**
-   * Validate and get user
-   * @param token Access token
-   * @returns User of token
-   */
-  async validateJwt(token: string): Promise<User> {
-    // Validate and decode token
-    const userId = (await this.jwtVerifyAccess(token))?.sub;
-
-    // Check userId
-    if (!userId) return null;
-
-    // Find user
-    return await this.usersService.findOne(userId);
-  }
-
-  /**
-   * Used to check expiration and signature
+   * Used to check validity of refresh token
    * @param token Access token
    * @returns Raw token payload
    */
-  async jwtVerifyAccess(token: string): Promise<UserTokenPayload> {
+  async verifyRefreshJwt(token: string): Promise<RefreshTokenPayload> {
+    let payload: RefreshTokenPayload;
     try {
-      return await this.jwtService.verifyAsync(token, {
-        secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
+      payload = this.jwtService.verify<RefreshTokenPayload>(token, {
+        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
       });
     } catch (_) {
-      return;
+      return null;
     }
+
+    const userId = payload.sub;
+    if (!userId) return null;
+
+    const user = await this.usersService.findOne(userId);
+    if (!user) return null;
+
+    const loginId = payload.jti;
+    if (!loginId) return null;
+
+    const login = await this.loginsRepository.findOneBy({ id: loginId });
+    if (!login) return null;
+
+    const matches = await bcrypt.compare(token.split('.')[2], login.token);
+    if (!matches) return null;
+
+    return payload;
   }
 
   // PRIVATE FUNCTIONS
-  private async getAccessToken(payload: UserTokenPayload): Promise<string> {
+  private async getAccessToken(payload: AccessTokenPayload): Promise<string> {
     return this.jwtService.signAsync(payload, {
       expiresIn: this.configService.get<string>('JWT_ACCESS_EXPIRE'),
       secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
     });
   }
 
-  private async getRefreshToken(payload: UserTokenPayload): Promise<string> {
+  private async getRefreshToken(payload: RefreshTokenPayload): Promise<string> {
     return this.jwtService.signAsync(payload, {
       expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRE'),
       secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
