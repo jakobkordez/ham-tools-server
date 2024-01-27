@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   Post,
   UseGuards,
@@ -40,5 +41,12 @@ export class AuthController {
     if (!newAuth) throw new BadRequestException('Invalid token');
 
     return newAuth;
+  }
+
+  @Public()
+  @UseGuards(RefreshAuthGuard)
+  @Delete('logout')
+  logout(@AuthToken() token: string) {
+    return this.authService.logout(token);
   }
 }

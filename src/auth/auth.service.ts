@@ -104,6 +104,17 @@ export class AuthService {
   }
 
   /**
+   * Deletes refresh token
+   * @param token Refresh token
+   */
+  async logout(token: string) {
+    const payload = await this.verifyRefreshJwt(token);
+    if (!payload) return;
+
+    await this.loginsRepository.delete(payload.jti);
+  }
+
+  /**
    * Deletes all refresh tokens of user
    * @param userId User to logout
    */

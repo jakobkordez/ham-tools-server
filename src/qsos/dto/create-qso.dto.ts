@@ -30,6 +30,7 @@ export class CreateQsoDto {
   @IsString()
   operator: string;
 
+  @IsOptional()
   @IsInt()
   profileId: number;
 
