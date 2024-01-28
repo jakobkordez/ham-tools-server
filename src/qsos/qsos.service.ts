@@ -9,18 +9,18 @@ import { UpdateQsoDto } from './dto/update-qso.dto';
 export class QsosService {
   constructor(@InjectRepository(Qso) private qsosRepository: Repository<Qso>) {}
 
-  create(createQsoDto: CreateQsoDto): Promise<Qso> {
+  create(userId: string, createQsoDto: CreateQsoDto): Promise<Qso> {
     const qso = new Qso();
     Object.assign(qso, createQsoDto);
-    qso.profileId = createQsoDto.profileId;
+    qso.ownerId = userId;
     return this.qsosRepository.save(qso);
   }
 
-  createMany(createQsoDto: CreateQsoDto[]): Promise<Qso[]> {
+  createMany(userId: string, createQsoDto: CreateQsoDto[]): Promise<Qso[]> {
     const qsos = createQsoDto.map((dto) => {
       const qso = new Qso();
-      qso.ownerId = dto.ownerId;
-      Object.assign(qso, createQsoDto);
+      qso.ownerId = userId;
+      Object.assign(qso, dto);
       return qso;
     });
     return this.qsosRepository.save(qsos);

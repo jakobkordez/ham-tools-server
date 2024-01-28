@@ -1,6 +1,7 @@
 import {
   IsDateString,
   IsInt,
+  IsNotEmpty,
   IsOptional,
   IsString,
   MinLength,
@@ -8,11 +9,8 @@ import {
 
 export class CreateQsoDto {
   @IsOptional()
-  @IsInt()
-  ownerId: string;
-
-  @IsOptional()
   @IsDateString()
+  @IsNotEmpty()
   created_at: string;
 
   @IsDateString()

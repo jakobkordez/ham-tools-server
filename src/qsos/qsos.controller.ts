@@ -39,8 +39,7 @@ export class QsosController {
       if (!profile) throw new NotFoundException('Profile not found');
     }
 
-    createQsoDto.ownerId = user.id;
-    return this.qsosService.create(createQsoDto);
+    return this.qsosService.create(user.id, createQsoDto);
   }
 
   @Post('many')
@@ -49,10 +48,7 @@ export class QsosController {
     @Body(new ParseArrayPipe({ items: CreateQsoDto }))
     createQsoDto: CreateQsoDto[],
   ) {
-    createQsoDto.forEach((entry) => {
-      entry.ownerId = user.id;
-    });
-    return this.qsosService.createMany(createQsoDto);
+    return this.qsosService.createMany(user.id, createQsoDto);
   }
 
   @Get('count')
