@@ -27,7 +27,6 @@ import { AccessAuthGuard } from './auth/guards/access-auth.guard';
         autoLoadEntities: true,
         // TODO remove synchronize in production
         synchronize: true,
-        logging: true,
       }),
       inject: [ConfigService],
     }),

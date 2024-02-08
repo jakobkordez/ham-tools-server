@@ -55,7 +55,7 @@ export class QsosService {
 
     const qsos = await this.qsosRepository.find({
       where: q,
-      order: { datetime_on: 'DESC', id: 'DESC' },
+      order: { datetimeOn: 'DESC', id: 'DESC' },
       take: limit,
       skip,
     });
@@ -66,6 +66,55 @@ export class QsosService {
     const entry = await this.qsosRepository.findOneBy({ id, ownerId: userId });
     if (!entry) throw new NotFoundException('QSO not found');
     return entry;
+  }
+
+  async stats(userId: string): Promise<any> {
+    const byMode = await this.qsosRepository
+      .createQueryBuilder('qso')
+      .select('mode, COUNT(*) as count')
+      .where('"ownerId" = :userId', { userId })
+      .groupBy('mode')
+      .getRawMany();
+
+    // Bad code, but Fck it
+    const byBandRaw = await this.qsosRepository
+      .createQueryBuilder('qso')
+      .select('(frequency / 1000000) as mhz, COUNT(*) as count')
+      .where('"ownerId" = :userId', { userId })
+      .groupBy('mhz')
+      .orderBy('mhz')
+      .getRawMany();
+
+    const bands = {
+      '160m': [1, 2],
+      '80m': [3, 3],
+      '60m': [5, 5],
+      '40m': [7, 7],
+      '30m': [10, 10],
+      '20m': [14, 14],
+      '17m': [18, 18],
+      '15m': [21, 21],
+      '12m': [24, 24],
+      '10m': [28, 29],
+      '6m': [50, 54],
+      '4m': [70, 70],
+      '2m': [144, 146],
+      '70cm': [430, 440],
+    };
+
+    const byBand = [];
+    for (const [name, [from, to]] of Object.entries(bands)) {
+      const count = byBandRaw.reduce((acc, { mhz, count }) => {
+        const freq = parseInt(mhz);
+        if (freq >= from && freq <= to) {
+          return acc + parseInt(count);
+        }
+        return acc;
+      }, 0);
+      byBand.push({ band: name, count });
+    }
+
+    return { byMode, byBand };
   }
 
   async update(id: number, userId: string, update: UpdateQsoDto): Promise<Qso> {

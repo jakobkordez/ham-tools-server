@@ -1,6 +1,8 @@
 import {
   IsDateString,
+  IsISO8601,
   IsInt,
+  IsJSON,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -11,26 +13,14 @@ export class CreateQsoDto {
   @IsOptional()
   @IsDateString()
   @IsNotEmpty()
-  created_at: string;
-
-  @IsDateString()
-  datetime_on: Date;
-
-  @IsOptional()
-  @IsDateString()
-  datetime_off: Date;
+  createdAt: string;
 
   @IsString()
   @MinLength(3)
   callsign: string;
 
-  @IsOptional()
-  @IsString()
-  operator: string;
-
-  @IsOptional()
-  @IsInt()
-  profileId: number;
+  @IsISO8601()
+  datetimeOn: Date;
 
   @IsInt()
   frequency: number;
@@ -39,42 +29,10 @@ export class CreateQsoDto {
   mode: string;
 
   @IsOptional()
-  @IsString()
-  rst_sent: string;
-
-  @IsOptional()
-  @IsString()
-  rst_rcvd: string;
-
-  @IsOptional()
-  @IsString()
-  gridsquare: string;
-
-  @IsOptional()
-  @IsString()
-  name: string;
-
-  @IsOptional()
-  @IsString()
-  comment: string;
-
-  @IsOptional()
-  @IsString()
-  contest_id: string;
-
-  @IsOptional()
   @IsInt()
-  serial_received: number;
+  profileId: number;
 
   @IsOptional()
-  @IsInt()
-  serial_sent: number;
-
-  @IsOptional()
-  @IsString()
-  contest_info_received: string;
-
-  @IsOptional()
-  @IsString()
-  contest_info_sent: string;
+  @IsJSON()
+  otherFields: object;
 }

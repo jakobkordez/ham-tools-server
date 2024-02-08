@@ -1,5 +1,6 @@
 import {
   Column,
+  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -20,20 +21,20 @@ export class Qso {
   @Column()
   ownerId: string;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  created_at: Date;
-
-  @Column({ type: 'timestamp' })
-  datetime_on: Date;
-
-  @Column({ type: 'timestamp', nullable: true })
-  datetime_off: Date;
+  @CreateDateColumn()
+  createdAt: Date;
 
   @Column()
   callsign: string;
 
-  @Column({ nullable: true })
-  operator: string;
+  @Column({ type: 'timestamp' })
+  datetimeOn: Date;
+
+  @Column()
+  frequency: number;
+
+  @Column()
+  mode: string;
 
   @ManyToOne(() => Profile, (profile) => profile.qsos)
   @JoinColumn({ name: 'profileId' })
@@ -42,39 +43,6 @@ export class Qso {
   @Column({ nullable: true })
   profileId: number;
 
-  @Column()
-  frequency: number;
-
-  @Column()
-  mode: string;
-
-  @Column({ nullable: true })
-  rst_sent: string;
-
-  @Column({ nullable: true })
-  rst_rcvd: string;
-
-  @Column({ nullable: true })
-  gridsquare: string;
-
-  @Column({ nullable: true })
-  name: string;
-
-  @Column({ type: 'text', nullable: true })
-  comment: string;
-
-  @Column({ nullable: true })
-  contest_id: string;
-
-  @Column({ nullable: true })
-  serial_received: number;
-
-  @Column({ nullable: true })
-  serial_sent: number;
-
-  @Column({ nullable: true })
-  contest_info_received: string;
-
-  @Column({ nullable: true })
-  contest_info_sent: string;
+  @Column({ type: 'jsonb', nullable: true })
+  otherFields: object;
 }

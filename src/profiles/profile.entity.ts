@@ -22,7 +22,7 @@ export class Profile {
   ownerId: string;
 
   @Column()
-  profile_name: string;
+  profileName: string;
 
   @Column()
   callsign: string;
@@ -34,10 +34,10 @@ export class Profile {
   dxcc: number;
 
   @Column({ nullable: true })
-  cq_zone: number;
+  cqZone: number;
 
   @Column({ nullable: true })
-  itu_zone: number;
+  ituZone: number;
 
   @Column({ nullable: true })
   gridsquare: string;

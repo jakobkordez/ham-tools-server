@@ -27,6 +27,11 @@ export class QsosController {
     private readonly profilesService: ProfilesService,
   ) {}
 
+  @Get('stats')
+  stats(@RequestUser() user: UserTokenData) {
+    return this.qsosService.stats(user.id);
+  }
+
   @Post()
   async create(
     @RequestUser() user: UserTokenData,

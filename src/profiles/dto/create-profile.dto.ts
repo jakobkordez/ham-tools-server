@@ -11,7 +11,7 @@ import {
 
 export class CreateProfileDto {
   @IsString()
-  profile_name: string;
+  profileName: string;
 
   @IsString()
   @IsUppercase()
@@ -33,12 +33,12 @@ export class CreateProfileDto {
   @IsOptional()
   @IsNumber()
   @IsPositive()
-  cq_zone: number;
+  cqZone: number;
 
   @IsOptional()
   @IsNumber()
   @IsPositive()
-  itu_zone: number;
+  ituZone: number;
 
   @IsOptional()
   @IsString()
